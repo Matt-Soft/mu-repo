@@ -5,6 +5,9 @@ from mu_repo.print_ import Print, PrintError
 import subprocess
 import threading
 
+sem = threading.Semaphore(value=8)
+
+
 #===================================================================================================
 # Indent
 #===================================================================================================
@@ -82,6 +85,7 @@ class ExecuteGitCommandThread(threading.Thread):
 
 
     def run(self, serial=False):
+        sem.acquire()
         repo = self.repo
         cmd = self.cmd
         msg = ' '.join([START_COLOR, '\n', repo, ':'] + cmd + [RESET_COLOR])
@@ -123,6 +127,7 @@ class ExecuteGitCommandThread(threading.Thread):
             stderr = AsStr(self.stderr_thread.GetFullOutput())
 
             self._HandleOutput(msg, stdout, stderr)
+            sem.release()
 
     def GetPartialStderrOutput(self):
         stderr_thread = getattr(self, 'stderr_thread', None)
